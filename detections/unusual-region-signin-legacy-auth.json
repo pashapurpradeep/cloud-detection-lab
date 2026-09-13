@@ -1,0 +1,79 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workspace": {
+            "type": "String"
+        }
+    },
+    "resources": [
+        {
+            "id": "[concat(resourceId('Microsoft.OperationalInsights/workspaces/providers', parameters('workspace'), 'Microsoft.SecurityInsights'),'/alertRules/a2a367fc-a85a-442e-8aa4-f7ba3725d4bf')]",
+            "name": "[concat(parameters('workspace'),'/Microsoft.SecurityInsights/a2a367fc-a85a-442e-8aa4-f7ba3725d4bf')]",
+            "type": "Microsoft.OperationalInsights/workspaces/providers/alertRules",
+            "kind": "Scheduled",
+            "apiVersion": "2023-12-01-preview",
+            "properties": {
+                "displayName": "Unusual Region Sign-In with Legacy Auth - Detection Lab",
+                "description": "Detects successful sign-ins using legacy (pre-MFA-capable) authentication protocols from outside the expected country. Schema-built and syntax-validated against real sign-in data; not attack-validated (no real legacy-auth sign-in was performed, to avoid flagging the live account).",
+                "severity": "Medium",
+                "enabled": true,
+                "query": "SigninLogs\r\n| where ResultType == \"0\"\r\n| where ClientAppUsed in (\"Exchange ActiveSync\", \"Authenticated SMTP\", \"IMAP4\", \"IMAP\", \"MAPI Over HTTP\", \"Offline Address Book\", \"Outlook Anywhere (RPC over HTTP)\", \"POP3\", \"POP\", \"Reporting Web Services\", \"Exchange Web Services\", \"Other clients\")\r\n| extend Country = tostring(LocationDetails.countryOrRegion)\r\n| where Country != \"GB\"\r\n| project TimeGenerated, UserPrincipalName, AppDisplayName, ClientAppUsed, Country, IPAddress, ResultType",
+                "queryFrequency": "PT5M",
+                "queryPeriod": "PT5M",
+                "triggerOperator": "GreaterThan",
+                "triggerThreshold": 0,
+                "suppressionDuration": "PT5H",
+                "suppressionEnabled": false,
+                "startTimeUtc": null,
+                "tactics": [
+                    "InitialAccess"
+                ],
+                "techniques": [
+                    "T1078"
+                ],
+                "subTechniques": [],
+                "alertRuleTemplateName": null,
+                "incidentConfiguration": {
+                    "createIncident": true,
+                    "groupingConfiguration": {
+                        "enabled": false,
+                        "reopenClosedIncident": false,
+                        "lookbackDuration": "PT5H",
+                        "matchingMethod": "AllEntities",
+                        "groupByEntities": [],
+                        "groupByAlertDetails": [],
+                        "groupByCustomDetails": []
+                    }
+                },
+                "eventGroupingSettings": {
+                    "aggregationKind": "AlertPerResult"
+                },
+                "alertDetailsOverride": null,
+                "customDetails": null,
+                "entityMappings": [
+                    {
+                        "entityType": "IP",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Address",
+                                "columnName": "IPAddress"
+                            }
+                        ]
+                    },
+                    {
+                        "entityType": "Account",
+                        "fieldMappings": [
+                            {
+                                "identifier": "Name",
+                                "columnName": "UserPrincipalName"
+                            }
+                        ]
+                    }
+                ],
+                "sentinelEntitiesMappings": null,
+                "templateVersion": null
+            }
+        }
+    ]
+}
